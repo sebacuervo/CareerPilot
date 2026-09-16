@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#111827">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="CareerPilot AI">
+<link rel="manifest" href="manifest.json">
+<title>CareerPilot AI v6</title>
+<style>
+:root{--bg:#f4f6f8;--card:#fff;--text:#111827;--muted:#667085;--line:#e5e7eb;--accent:#111827;--soft:#eef2ff}
+*{box-sizing:border-box}body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",sans-serif;background:var(--bg);color:var(--text);padding-bottom:90px}
+header{padding:calc(env(safe-area-inset-top) + 18px) 18px 18px;background:#111827;color:white}
+header h1{margin:0;font-size:25px}header p{margin:5px 0 0;color:#cbd5e1;font-size:14px}
+nav{display:flex;gap:8px;overflow:auto;padding:10px 14px;background:white;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5}
+nav button{border:0;background:#f2f4f7;padding:9px 12px;border-radius:20px;white-space:nowrap;font-weight:600;color:#475467}
+nav button.active{background:#111827;color:white}
+main{padding:16px;max-width:720px;margin:auto}.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:12px;box-shadow:0 2px 8px #00000008}
+.stat{font-size:27px;font-weight:800}.label{font-size:13px;color:var(--muted);margin-top:3px}
+h2{font-size:20px;margin:6px 0 14px}h3{font-size:16px;margin:0 0 8px}
+input,textarea,select{width:100%;padding:12px;border:1px solid #d0d5dd;border-radius:11px;font:inherit;background:white;margin:5px 0 10px}
+textarea{min-height:130px;resize:vertical}
+button.primary{width:100%;padding:13px;border:0;border-radius:12px;background:#111827;color:white;font-weight:700;font-size:15px}
+button.secondary{padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:white;font-weight:600}
+.row{display:flex;gap:8px;align-items:center}.row>*{flex:1}
+.badge{display:inline-block;padding:5px 9px;border-radius:20px;background:var(--soft);font-size:12px;font-weight:700}
+.score{font-size:38px;font-weight:900}.hidden{display:none}.item{padding:12px 0;border-top:1px solid var(--line)}
+small{color:var(--muted)}
+footer{position:fixed;bottom:0;left:0;right:0;background:white;border-top:1px solid var(--line);padding:10px 16px calc(10px + env(safe-area-inset-bottom));font-size:12px;color:var(--muted);text-align:center}
+</style>
+</head>
+<body>
+<header><h1>CareerPilot AI</h1><p>v6 · Tu copiloto de carrera profesional</p></header>
+<nav>
+<button class="active" onclick="show('home',this)">Inicio</button>
+<button onclick="show('match',this)">Match</button>
+<button onclick="show('cv',this)">CV</button>
+<button onclick="show('apps',this)">Postulaciones</button>
+<button onclick="show('profile',this)">Perfil</button>
+</nav>
+<main>
+<section id="home">
+<h2>Dashboard</h2>
+<div class="grid">
+<div class="card"><div class="stat" id="napps">0</div><div class="label">Postulaciones</div></div>
+<div class="card"><div class="stat" id="nint">0</div><div class="label">Entrevistas</div></div>
+<div class="card"><div class="stat" id="nfollow">0</div><div class="label">Seguimientos</div></div>
+<div class="card"><div class="stat">v6</div><div class="label">CareerPilot</div></div>
+</div>
+<div class="card"><h3>🚀 Próximo paso</h3><p>Pegá una oferta laboral en <b>Match</b> y CareerPilot calculará una compatibilidad orientativa y te dará puntos para adaptar tu candidatura.</p></div>
+<div class="card"><h3>👤 Tu perfil</h3><p id="profilePreview">Todavía no cargaste tu perfil.</p><button class="secondary" onclick="show('profile')">Completar perfil</button></div>
+</section>
+
+<section id="match" class="hidden">
+<h2>🎯 Job Match</h2>
+<div class="card"><label>Oferta laboral</label><textarea id="job" placeholder="Pegá aquí la descripción completa de la posición..."></textarea><button class="primary" onclick="analyze()">Analizar compatibilidad</button></div>
+<div id="result" class="card hidden"><div class="score" id="score">0%</div><p id="scoreText"></p><div id="keywords"></div><h3>Recomendaciones</h3><ul id="recs"></ul></div>
+</section>
+
+<section id="cv" class="hidden">
+<h2>📄 CV inteligente</h2>
+<div class="card"><h3>Resumen profesional</h3><textarea id="summary" placeholder="Pegá tu resumen profesional o experiencia..."></textarea><button class="primary" onclick="makeCV()">Generar versión orientada a la oferta</button></div>
+<div id="cvout" class="card hidden"></div>
+</section>
+
+<section id="apps" class="hidden">
+<h2>📊 Postulaciones</h2>
+<div class="card"><input id="company" placeholder="Empresa"><input id="role" placeholder="Puesto"><select id="status"><option>Aplicada</option><option>Entrevista</option><option>Seguimiento</option><option>Rechazada</option><option>Oferta</option></select><button class="primary" onclick="addApp()">Guardar</button></div>
+<div id="list" class="card"></div>
+</section>
+
+<section id="profile" class="hidden">
+<h2>👤 Perfil profesional</h2>
+<div class="card"><input id="pname" placeholder="Nombre"><input id="headline" placeholder="Título profesional"><textarea id="skills" placeholder="Skills, separadas por coma"></textarea><textarea id="experience" placeholder="Experiencia y logros principales"></textarea><button class="primary" onclick="saveProfile()">Guardar perfil</button></div>
+<div class="card"><small>Los datos de esta demo se guardan localmente en este dispositivo. No se envían a ningún servidor.</small></div>
+</section>
+</main>
+<footer>CareerPilot AI v6 · PWA · Uso local</footer>
+<script>
+const $=id=>document.getElementById(id);
+let apps=JSON.parse(localStorage.getItem('cp_apps')||'[]');
+let profile=JSON.parse(localStorage.getItem('cp_profile')||'{}');
+function show(id,btn){document.querySelectorAll('main>section').forEach(x=>x.classList.add('hidden'));$(id).classList.remove('hidden');document.querySelectorAll('nav button').forEach(x=>x.classList.remove('active'));if(btn)btn.classList.add('active');refresh()}
+function refresh(){ $('napps').textContent=apps.length;$('nint').textContent=apps.filter(x=>x.status==='Entrevista'||x.status==='Oferta').length;$('nfollow').textContent=apps.filter(x=>x.status==='Seguimiento').length;$('profilePreview').textContent=profile.headline?profile.headline+' · '+(profile.skills||''): 'Todavía no cargaste tu perfil.';renderApps()}
+function analyze(){
+ let job=$('job').value.toLowerCase(), skills=(profile.skills||'').toLowerCase().split(',').map(x=>x.trim()).filter(Boolean);
+ let words=[...new Set((job.match(/[a-záéíóúüñ]{4,}/gi)||[]).map(x=>x.toLowerCase()))];
+ let hits=skills.filter(s=>s&&job.includes(s)); let base=skills.length?Math.round(hits.length/skills.length*100):35;
+ if(!skills.length){let common=['finance','strategy','planning','accounting','operations','leadership','sap','excel','automation','analytics'];let h=common.filter(x=>job.includes(x));base=Math.min(90,35+h.length*7)}
+ $('score').textContent=base+'%';$('scoreText').textContent=base>=75?'Alta coincidencia orientativa. Revisá los requisitos críticos.':base>=50?'Coincidencia parcial. Conviene adaptar el CV a esta posición.':'Hay brechas que conviene revisar antes de postular.';
+ $('keywords').innerHTML=(hits.length?hits:['Definí más skills en tu perfil']).map(x=>'<span class="badge">'+x+'</span>').join(' ');
+ $('recs').innerHTML=['Destacar logros cuantificables relacionados con la posición.','Usar en el CV las competencias que aparecen en la oferta cuando sean verdaderas en tu experiencia.','Preparar ejemplos concretos para los requisitos principales.'].map(x=>'<li>'+x+'</li>').join('');
+ $('result').classList.remove('hidden'); localStorage.setItem('cp_job',job);
+}
+function makeCV(){let s=$('summary').value.trim(), job=$('job').value.trim();$('cvout').classList.remove('hidden');$('cvout').innerHTML='<h3>Versión orientada</h3><p>'+escapeHTML(s||profile.experience||'Agregá tu experiencia en el campo anterior.')+'</p><p><b>Enfoque:</b> enfatizar experiencia, resultados y competencias directamente relacionadas con la oferta analizada.</p>'}
+function escapeHTML(s){return s.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function addApp(){if(!$('company').value||!$('role').value)return;apps.unshift({company:$('company').value,role:$('role').value,status:$('status').value,date:new Date().toLocaleDateString()});localStorage.setItem('cp_apps',JSON.stringify(apps));$('company').value='';$('role').value='';refresh()}
+function renderApps(){$('list').innerHTML=apps.length?apps.map((x,i)=>'<div class="item"><b>'+escapeHTML(x.role)+'</b><br>'+escapeHTML(x.company)+' · <span class="badge">'+x.status+'</span><br><small>'+x.date+'</small></div>').join(''):'<small>Aún no hay postulaciones.</small>'}
+function saveProfile(){profile={name:$('pname').value,headline:$('headline').value,skills:$('skills').value,experience:$('experience').value};localStorage.setItem('cp_profile',JSON.stringify(profile));refresh();show('home')}
+$('pname').value=profile.name||'';$('headline').value=profile.headline||'';$('skills').value=profile.skills||'';$('experience').value=profile.experience||'';refresh();
+if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
+</script>
+</body></html>
